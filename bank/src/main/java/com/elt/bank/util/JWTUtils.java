@@ -15,9 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.oauth2.resource.OAuth2ResourceServerProperties;
 import org.springframework.stereotype.Component;
 
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
@@ -46,24 +44,52 @@ public class JWTUtils {
     }
 
     private static Claims parseJwtAndGetClaims(final String jwtToken) {
-        log.info("parsing jwt token for claims."+jwtToken);
+        log.info("parsing jwt token for claims. "+jwtToken);
         return Jwts.parser().setSigningKey(Constants.SECRET).parseClaimsJws(jwtToken).getBody();
     }
 
+    public static Map<String, Object> getTokenMap(final String token) {
+        Claims claims = parseJwtAndGetClaims(token);
+        Map<String, Object> m = new TreeMap<>();
+        m.put(Constants.JWT_EXPIRY_TIME, claims.getExpiration().getTime());
+        m.put(Constants.JWT_TOKEN_EMAIL, claims.get(Constants.JWT_TOKEN_EMAIL));
+        m.put(Constants.JWT_TOKEN_ROLES, claims.get(Constants.JWT_TOKEN_ROLES));
+        m.put(Constants.JWT_ISSUE_TIME, claims.getIssuedAt().getTime());
+        m.put(Constants.JWT_USER_NAME, claims.getSubject());
+        return m;
+    }
+
     public static boolean validateJwtToken(String token) {
-        //TODO
-        return false;
+        boolean f = false;
+        try {
+            if (token != null && token.startsWith(Constants.TOKEN_PREFIX))
+                token = token.substring(Constants.TOKEN_PREFIX.length());
+            Claims c = parseJwtAndGetClaims(token);
+            f = c.getExpiration() != null && !getBlackSet()
+                    .contains(token);
+        }
+        catch (Exception e) {
+            log.trace("An error while validation token.", e);
+            f=false;
+        }
+        log.info("returning "+f);
+        return f;
     }
 
     public static Set<String> getBlackSet() {
         return blackSet;
     }
 
+    private static String onlyToken(String token) {
+        String[] arr = token.split("\\s");
+        final String tokenOnly = arr[1];
+        return tokenOnly;
+    }
+
     public static void logout(String token) {
         Thread blackSetCleaner;
         try{
-            String[] arr = token.split("\\s");
-            final String tokenOnly = arr[1];
+            final String tokenOnly = onlyToken(token);
             Claims claims = parseJwtAndGetClaims(tokenOnly);
             Date exp = claims.getExpiration();
             long timeLeft = exp.getTime()-System.currentTimeMillis();

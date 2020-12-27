@@ -6,6 +6,7 @@ import com.elt.bank.modal.User;
 import com.elt.bank.repo.PrivilegeRepo;
 import com.elt.bank.repo.RoleRepo;
 import com.elt.bank.repo.UserRepo;
+import com.elt.bank.util.Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +16,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import javax.transaction.Transactional;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -48,15 +50,13 @@ public class SetupPrivileges implements ApplicationListener<ContextRefreshedEven
         if (alreadySetup)
             return;
 
-        Privilege readPrivilege
-                = createPrivilegeIfNotFound("READ_PRIVILEGE");
-        Privilege writePrivilege
-                = createPrivilegeIfNotFound("WRITE_PRIVILEGE");
 
-        List<Privilege> adminPrivileges = Arrays.asList(
-                readPrivilege, writePrivilege);
+
+        List<Privilege> adminPrivileges = createAdminPrivileges();
+        List<Privilege> empPrivileges = createEmpPrivileges();
+
         createRoleIfNotFound("ROLE_ADMIN", adminPrivileges);
-        createRoleIfNotFound("ROLE_USER", Arrays.asList(readPrivilege));
+        createRoleIfNotFound("ROLE_EMP", empPrivileges);
 
         Role adminRole = roleRepository.findByName("ROLE_ADMIN");
         User user = new User();
@@ -64,9 +64,9 @@ public class SetupPrivileges implements ApplicationListener<ContextRefreshedEven
         user.setLastName("Sharma");
         user.setUserName("admin");
         user.setPassword(passwordEncoder.encode("test"));
-        user.setEmail("test@test.com");
+        user.setEmail("vjymits@gmail.com");
         user.setRoles(Arrays.asList(adminRole));
-        user.setEnabled(true);
+        user.setType(Constants.ADMIN_USER_TYPE);
         userRepository.save(user);
         log.info("Admin setup Done...");
         alreadySetup = true;
@@ -96,6 +96,30 @@ public class SetupPrivileges implements ApplicationListener<ContextRefreshedEven
             roleRepository.save(role);
         }
         return role;
+    }
+
+    private List<Privilege> createAdminPrivileges() {
+        List<Privilege> prvs = new ArrayList<>();
+        prvs.add(createPrivilegeIfNotFound(Constants.ADD_EMP_PRIVILEGE));
+        prvs.add(createPrivilegeIfNotFound(Constants.DEL_EMP_PRIVILEGE));
+        return prvs;
+    }
+
+    private List<Privilege> createEmpPrivileges() {
+        List<Privilege> prvs = new ArrayList<>();
+        prvs.add(createPrivilegeIfNotFound(Constants.ADD_CUST));
+        prvs.add(createPrivilegeIfNotFound(Constants.DEL_CUST));
+        prvs.add(createPrivilegeIfNotFound(Constants.READ_CUST));
+        prvs.add(createPrivilegeIfNotFound(Constants.UPDATE_CUST));
+
+        prvs.add(createPrivilegeIfNotFound(Constants.ADD_ACC));
+        prvs.add(createPrivilegeIfNotFound(Constants.DEL_ACC));
+        prvs.add(createPrivilegeIfNotFound(Constants.READ_ACC));
+        prvs.add(createPrivilegeIfNotFound(Constants.UPDATE_ACC));
+
+        prvs.add(createPrivilegeIfNotFound(Constants.ADD_TRN));
+        prvs.add(createPrivilegeIfNotFound(Constants.READ_TRN));
+        return prvs;
     }
 
 

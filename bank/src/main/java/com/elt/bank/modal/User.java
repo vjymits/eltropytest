@@ -1,6 +1,8 @@
 package com.elt.bank.modal;
 
 
+import net.minidev.json.annotate.JsonIgnore;
+
 import javax.persistence.*;
 import java.util.List;
 
@@ -16,9 +18,8 @@ public class User {
     private String email;
     private String userName;
     private String password;
+    private String type;
 
-    private boolean enabled;
-    private boolean tokenExpired;
 
     @ManyToMany
     @JoinTable(
@@ -27,6 +28,7 @@ public class User {
                     name = "user_id", referencedColumnName = "id"),
             inverseJoinColumns = @JoinColumn(
                     name = "role_id", referencedColumnName = "id"))
+    @JsonIgnore
     private List<Role> roles;
 
     public String getUserName() {
@@ -77,20 +79,12 @@ public class User {
         this.password = password;
     }
 
-    public boolean isEnabled() {
-        return enabled;
+    public String getType() {
+        return this.type;
     }
 
-    public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
-    }
-
-    public boolean isTokenExpired() {
-        return tokenExpired;
-    }
-
-    public void setTokenExpired(boolean tokenExpired) {
-        this.tokenExpired = tokenExpired;
+    public void setType(String t) {
+        this.type = t;
     }
 
     public List<Role> getRoles() {

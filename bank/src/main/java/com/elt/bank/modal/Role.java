@@ -1,6 +1,8 @@
 package com.elt.bank.modal;
 
 
+import net.minidev.json.annotate.JsonIgnore;
+
 import javax.persistence.*;
 import java.util.Collection;
 import java.util.List;
@@ -13,6 +15,8 @@ public class Role {
     private Long id;
 
     private String name;
+
+    @JsonIgnore
     @ManyToMany(mappedBy = "roles")
     private Collection<User> users;
 
@@ -25,6 +29,9 @@ public class Role {
                     name = "privilege_id", referencedColumnName = "id"))
     private List<Privilege> privileges;
 
+    public Role(String name){this.name = name;}
+
+    public Role() {}
 
     public Long getId() {
         return id;
