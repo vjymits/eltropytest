@@ -4,6 +4,7 @@ package com.elt.bank.controller;
 import com.elt.bank.modal.Account;
 import com.elt.bank.modal.Customer;
 import com.elt.bank.modal.User;
+import com.elt.bank.pojo.UserPojo;
 import com.elt.bank.service.AccountService;
 import com.elt.bank.service.CustomerService;
 import com.elt.bank.util.Constants;
@@ -13,6 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.annotation.PostConstruct;
 import java.util.*;
 
 @RestController
@@ -25,34 +27,42 @@ public class AccountController {
     @Autowired
     private AccountService accountService;
 
+    private Set<String> accountTypes;
 
-    @PostMapping("/account")
-    public ResponseEntity createAccount(@RequestAttribute("user") User currentuser,
-                                        @RequestBody Map<String, Object> body){
+    private final String CUSTOMER_ID = "customerId";
 
-        Object ocustId = body.get("customerId");
-        if (ocustId == null)
-            return new ResponseEntity(errorResponse("customerId is mandatory."),
-                    HttpStatus.BAD_REQUEST);
-        long custId = Long.parseLong(body.get("customerId").toString());
-        Set<String> accountTypes = new HashSet<>();
+    @PostConstruct
+    public void init(){
+        this.accountTypes = new HashSet<>();
         accountTypes.add("saving");
         accountTypes.add("current");
         accountTypes.add("loan");
         accountTypes.add("salary");
+    }
+
+
+    @PostMapping("/account")
+    public ResponseEntity<Object> createAccount(@RequestAttribute("user") UserPojo currentuser,
+                                        @RequestBody Map<String, Object> body){
+
+        Object ocustId = body.get(CUSTOMER_ID);
+        if (ocustId == null)
+            return new ResponseEntity<>(errorResponse("customerId is mandatory."),
+                    HttpStatus.BAD_REQUEST);
+        long custId = Long.parseLong(body.get(CUSTOMER_ID).toString());
 
         String accType = body.get("accountType").toString();
         //Validate customer
         Optional<Customer> o = customerService.getCustomerById(custId);
         if(!o.isPresent())
-            return new ResponseEntity(errorResponse("Cannot create account since no such customer exist."),
+            return new ResponseEntity<>(errorResponse("Cannot create account since no such customer exist."),
                 HttpStatus.BAD_REQUEST);
         //Validate account type
         if(!accountTypes.contains(accType))
-            return new ResponseEntity(errorResponse("no such account type supported."),
+            return new ResponseEntity<>(errorResponse("no such account type supported."),
                     HttpStatus.BAD_REQUEST);
         Account a = accountService.createAccount(body);
-        return new ResponseEntity(accountResponse(a), HttpStatus.OK);
+        return new ResponseEntity<>(accountResponse(a), HttpStatus.OK);
     }
 
     private Map<String, String> errorResponse(String msg) {
@@ -60,27 +70,27 @@ public class AccountController {
     }
 
     @GetMapping("account/{accId}")
-    public ResponseEntity getAccount(@RequestAttribute("user")User currentUser,
+    public ResponseEntity<Object> getAccount(@RequestAttribute("user")UserPojo currentUser,
                                       @PathVariable("accId") Long accId){
         Optional<Account> o = accountService.getAccountByAccountId(accId);
         if(!o.isPresent())
-            return new ResponseEntity(errorResponse("No Such Account exist."),
+            return new ResponseEntity<>(errorResponse("No Such Account exist."),
                     HttpStatus.BAD_REQUEST);
         Account a = o.get();
-        return new ResponseEntity(accountResponse(a), HttpStatus.OK);
+        return new ResponseEntity<>(accountResponse(a), HttpStatus.OK);
 
     }
 
     @DeleteMapping("account/{accId}")
-    public ResponseEntity deleteAccount(@RequestAttribute("user")User currentUser,
+    public ResponseEntity<Object> deleteAccount(@RequestAttribute("user")UserPojo currentUser,
                                          @PathVariable("accId") Long accId){
         Optional<Account> o = accountService.getAccountByAccountId(accId);
         if(!o.isPresent())
-            return new ResponseEntity(errorResponse("No Such account exist."),
+            return new ResponseEntity<>(errorResponse("No Such account exist."),
                     HttpStatus.BAD_REQUEST);
         Account a = o.get();
         accountService.deleteAccount(a);
-        return new ResponseEntity(accountResponse(a), HttpStatus.OK);
+        return new ResponseEntity<>(accountResponse(a), HttpStatus.OK);
 
     }
 
@@ -90,9 +100,9 @@ public class AccountController {
         m.put("accountType", a.getAccType());
         m.put("balance", a.getBalance());
         m.put("accountNo", a.getNo());
-        m.put("customerId", a.getCustomer().getId());
+        m.put(CUSTOMER_ID, a.getCustomer().getId());
         m.put("customerName", a.getCustomer().getName());
-        m.put("link", Constants.API_BASE_URL+"/account/"+a.getNo());
+        m.put("link", "/"+Constants.API_BASE_URL+"/account/"+a.getNo());
         return m;
     }
 }

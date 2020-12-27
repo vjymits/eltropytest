@@ -1,6 +1,8 @@
 package com.elt.bank.modal;
 
 import javax.persistence.*;
+import java.util.Date;
+import java.util.zip.DataFormatException;
 
 @Entity(name = "elt_transaction")
 public class Transaction {
@@ -10,13 +12,29 @@ public class Transaction {
     private Long id;
 
     @ManyToOne
-    private Account sourceAcc;
+    private Account acc;
 
-    @ManyToOne
-    private Account targetAcc;
+    private Float amount;
 
-    private long amount;
+    private String desc;
 
+    private Date date;
+
+    public Date getDate() {
+        return date;
+    }
+
+    public void setDate(Date date) {
+        this.date = date;
+    }
+
+    public String getDesc() {
+        return desc;
+    }
+
+    public void setDesc(String desc) {
+        this.desc = desc;
+    }
 
     public Long getId() {
         return id;
@@ -26,27 +44,19 @@ public class Transaction {
         this.id = id;
     }
 
-    public Account getSourceAcc() {
-        return sourceAcc;
+    public Account getAcc() {
+        return acc;
     }
 
-    public void setSourceAcc(Account sourceAcc) {
-        this.sourceAcc = sourceAcc;
+    public void setAcc(Account targetAcc) {
+        this.acc = targetAcc;
     }
 
-    public Account getTargetAcc() {
-        return targetAcc;
-    }
-
-    public void setTargetAcc(Account targetAcc) {
-        this.targetAcc = targetAcc;
-    }
-
-    public long getAmount() {
+    public Float getAmount() {
         return amount;
     }
 
-    public void setAmount(long amount) {
+    public void setAmount(Float amount) {
         this.amount = amount;
     }
 }

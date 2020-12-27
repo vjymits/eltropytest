@@ -1,6 +1,7 @@
 package com.elt.bank.controller;
 
 import com.elt.bank.modal.User;
+import com.elt.bank.pojo.UserPojo;
 import com.elt.bank.service.UserService;
 import com.elt.bank.util.Constants;
 import com.elt.bank.util.ResponseUtil;
@@ -26,31 +27,31 @@ public class EmployeeController {
 
 
     @PostMapping(Constants.EMP_URL)
-    public ResponseEntity createEmployee(
-            @RequestAttribute("user")User user,
+    public ResponseEntity<Object> createEmployee(
+            @RequestAttribute("user") UserPojo currentuser,
             @RequestBody Map<String, String> body) {
         log.info("Adding emp");
         String username = body.get("username");
         String password = body.get("password");
         // validate username
         if(username == null || username.length() == 0) {
-            log.warn("Username validation failed" + username);
-            return new ResponseEntity(errorResponse("Invalid Username!"), HttpStatus.BAD_REQUEST);
+
+            return new ResponseEntity<>(errorResponse("Invalid Username!"), HttpStatus.BAD_REQUEST);
         }
         //validate password
         if(password == null || password.length() == 0) {
-            log.warn("password validation failed" + username);
-            return new ResponseEntity(errorResponse("Invalid password!"), HttpStatus.BAD_REQUEST);
+
+            return new ResponseEntity<>(errorResponse("Invalid password!"), HttpStatus.BAD_REQUEST);
         }
         // find the duplicate if any
         User duplicate = userService.getUserByName(username);
         if(duplicate != null) {
-            log.warn("Tried creating a duplicate user by username: " + user.getUserName());
-            return new ResponseEntity(errorResponse("Duplicate username!"), HttpStatus.BAD_REQUEST);
+            log.error("Tried creating a duplicate user by username: {}",currentuser.getUsername());
+            return new ResponseEntity<>(errorResponse("Duplicate username!"), HttpStatus.BAD_REQUEST);
         }
         User newEmp = userService.createEmpUser(body);
 
-        return new ResponseEntity(userResponse(newEmp), HttpStatus.OK);
+        return new ResponseEntity<>(userResponse(newEmp), HttpStatus.OK);
     }
 
     /**
@@ -60,16 +61,16 @@ public class EmployeeController {
      * @return
      */
     @DeleteMapping(Constants.EMP_URL+"/{empId}")
-    public ResponseEntity deleteEmployee (
-            @RequestAttribute("user")User currentUser,
+    public ResponseEntity<Object> deleteEmployee (
+            @RequestAttribute("user")UserPojo currentUser,
             @PathVariable("empId") Long empId) {
         Optional<User> o = userService.getUserById(empId);
         if(!o.isPresent())
-            return new ResponseEntity(errorResponse("No Such employee exist."),
+            return new ResponseEntity<>(errorResponse("No Such employee exist."),
                     HttpStatus.BAD_REQUEST);
         User u = o.get();
         userService.deleteUser(u);
-        return new ResponseEntity(userResponse(u), HttpStatus.OK);
+        return new ResponseEntity<>(userResponse(u), HttpStatus.OK);
     }
 
     /**
@@ -80,15 +81,15 @@ public class EmployeeController {
      */
 
     @GetMapping(Constants.EMP_URL+"/{empId}")
-    public ResponseEntity getEmployee (
-            @RequestAttribute("user")User currentUser,
+    public ResponseEntity<Object> getEmployee (
+            @RequestAttribute("user")UserPojo currentUser,
             @PathVariable("empId") Long empId) {
         Optional<User> o = userService.getUserById(empId);
         if(!o.isPresent())
-            return new ResponseEntity(errorResponse("No Such employee exist."),
+            return new ResponseEntity<>(errorResponse("No Such employee exist."),
                     HttpStatus.BAD_REQUEST);
         User u = o.get();
-        return new ResponseEntity(userResponse(u), HttpStatus.OK);
+        return new ResponseEntity<>(userResponse(u), HttpStatus.OK);
     }
 
 

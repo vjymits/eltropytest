@@ -42,7 +42,7 @@ public class UserServiceImpl implements UserService {
         newEmp.setEmail(data.get("email"));
         newEmp.setPassword(data.get("password"));
         Role empRole = roleRepo.findByName("ROLE_EMP");
-        log.info("Role : "+empRole);
+        log.info("Role : {}",empRole);
         newEmp.setRoles(Arrays.asList(empRole));
         newEmp = userRepo.save(newEmp);
         return newEmp;
@@ -65,14 +65,5 @@ public class UserServiceImpl implements UserService {
         return u;
     }
 
-    private boolean validateUser(User u) {
-        // user name must be there
-        if(u.getUserName() == null || u.getUserName().length() == 0)
-            return false;
-        //Password validation
-        if(u.getPassword() == null || u.getPassword().length() == 0)
-            return false;
 
-        return true;
-    }
 }

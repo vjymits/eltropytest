@@ -19,14 +19,22 @@ import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
+/**
+ * All operation related to JWT token, such as creating, blacklisting and
+ * validating etc.
+ */
+
 @Component
 public class JWTUtils {
 
     private static final Logger log = LoggerFactory.getLogger(JWTUtils.class);
-
-
     private static Set<String> blackSet = new HashSet<>();
 
+    /**
+     * Create a jwt token for the user, and add important data in.
+     * @param user
+     * @return
+     */
     public static String genrateJwtToken(User user){
         log.info("Genrating jwt token for user: "+user.getUserName());
         long t = System.currentTimeMillis();
@@ -43,11 +51,21 @@ public class JWTUtils {
         return "Bearer "+token;
     }
 
+    /**
+     * get JWT token claims.
+     * @param jwtToken
+     * @return
+     */
     private static Claims parseJwtAndGetClaims(final String jwtToken) {
         log.info("parsing jwt token for claims. "+jwtToken);
         return Jwts.parser().setSigningKey(Constants.SECRET).parseClaimsJws(jwtToken).getBody();
     }
 
+    /**
+     * Get the token data in the form of map, which was encapsulated in token.
+     * @param token
+     * @return
+     */
     public static Map<String, Object> getTokenMap(final String token) {
         Claims claims = parseJwtAndGetClaims(token);
         Map<String, Object> m = new TreeMap<>();
@@ -59,6 +77,11 @@ public class JWTUtils {
         return m;
     }
 
+    /**
+     * Validate the token, by checking sign, expiry and blacklisted or not.
+     * @param token
+     * @return
+     */
     public static boolean validateJwtToken(String token) {
         boolean f = false;
         try {
@@ -76,16 +99,30 @@ public class JWTUtils {
         return f;
     }
 
+    /**
+     * Get blacklist which is a set.
+     * @return
+     */
     public static Set<String> getBlackSet() {
         return blackSet;
     }
 
+    /**
+     * Get rid of Bearer word in token.
+     * @param token
+     * @return
+     */
     private static String onlyToken(String token) {
         String[] arr = token.split("\\s");
         final String tokenOnly = arr[1];
         return tokenOnly;
     }
 
+    /**
+     * Stateless log out by putting token in black list
+     * later remove from black list if it expire.
+     * @param token
+     */
     public static void logout(String token) {
         Thread blackSetCleaner;
         try{
@@ -98,6 +135,7 @@ public class JWTUtils {
             blackSetCleaner = new Thread() {
                 public void run() {
                     try {
+                        // Sleep till token expire +1 sec.
                         Thread.sleep(timeLeft+1000);
                         getBlackSet().remove(tokenOnly);
                         log.info("Black-set updated by cleanup, size now : "
@@ -113,7 +151,7 @@ public class JWTUtils {
             log.info("Token already expired");
             return;
         }
-
+        // start cleaner thread for the token.
         blackSetCleaner.setDaemon(true);
         blackSetCleaner.setName("blackSetCleanerThread");
         blackSetCleaner.start();
