@@ -18,7 +18,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 @RestController
-@RequestMapping(Constants.API_BASE_URL+"/auth")
+@RequestMapping(Constants.LOGIN_URL)
 public class LoginController {
     private static final Logger log = LoggerFactory.getLogger(LoginController.class);
 
