@@ -21,12 +21,30 @@ public class CustomerServiceImpl implements CustomerService {
 
     public Customer createCustomer(Map<String, String> m){
         Customer c = new Customer();
+        fill(c, m);
+        c = customerRepo.save(c);
+        return c;
+    }
+
+    public Customer updateCustomer(Customer c, Map<String, String> m) {
+        fill(c, m);
+        customerRepo.save(c);
+        return c;
+    }
+
+    public Customer updateKYC(Customer c, String pan, String aadhar) {
+        c.setPan(pan);
+        c.setAadhar(aadhar);
+        customerRepo.save(c);
+        return c;
+    }
+
+    private Customer fill(Customer c, Map<String, String> m){
         c.setName(m.get("name"));
         c.setEmail(m.get("email"));
         c.setPhone(m.get("phone"));
         c.setAadhar(m.get("aadhar"));
         c.setPan(m.get("pan"));
-        c = customerRepo.save(c);
         return c;
     }
 

@@ -12,7 +12,6 @@ public interface Constants {
     String ACC_URL = API_BASE_URL+"/accounts";
 
     // Security constants
-
     String SECRET = "SecretEltro12y";
     //long EXPIRATION_TIME = 864_000_000; // 10 days
     long EXPIRATION_TIME = 60000*10;   // 10 min
@@ -39,7 +38,7 @@ public interface Constants {
 
     String ADD_ACC = "ADD_ACC";
     String DEL_ACC = "DEL_ACC";
-    String UPDATE_ACC = "UPADTE_ACC";
+    String UPDATE_ACC = "UPDATE_ACC";
     String READ_ACC = "READ_ACC";
 
     //TRN Prvs
@@ -49,7 +48,5 @@ public interface Constants {
     //USER TYPE
     String ADMIN_USER_TYPE = "a";
     String EMP_USER_TYPE = "e";
-
-
 
 }

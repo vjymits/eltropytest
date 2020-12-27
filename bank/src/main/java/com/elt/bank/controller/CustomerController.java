@@ -2,7 +2,8 @@ package com.elt.bank.controller;
 
 import com.elt.bank.modal.Account;
 import com.elt.bank.modal.Customer;
-import com.elt.bank.modal.User;
+
+import com.elt.bank.pojo.UserPojo;
 import com.elt.bank.service.CustomerService;
 import com.elt.bank.util.Constants;
 import com.elt.bank.util.ResponseUtil;
@@ -26,49 +27,81 @@ public class CustomerController {
     @Autowired
     private CustomerService customerService;
 
+    private final String NO_CUST_FOUND = "No such customer exist.";
+
 
     @PostMapping("/customer")
-    public ResponseEntity createCustomer(@RequestAttribute("user") User user,
+    public ResponseEntity<Object> createCustomer(@RequestAttribute("user") UserPojo user,
                                          @RequestBody Map<String, String> body) {
         String name = body.get("name");
         // validate name
         if(name == null || name.length() == 0){
-            return new ResponseEntity(errorResponse("Invalid customer name!"), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(errorResponse("Invalid customer name!"), HttpStatus.BAD_REQUEST);
         }
         // create customer
         Customer c  = customerService.createCustomer(body);
-        return new ResponseEntity(customerResponse(c), HttpStatus.OK);
+        return new ResponseEntity<>(customerResponse(c), HttpStatus.OK);
 
     }
 
     @GetMapping("customer/{custId}")
-    public ResponseEntity getCustomer(@RequestAttribute("user")User currentUser,
+    public ResponseEntity<Object> getCustomer(@RequestAttribute("user")UserPojo currentUser,
                                       @PathVariable("custId") Long custId){
         Optional<Customer> o = customerService.getCustomerById(custId);
         if(!o.isPresent())
-            return new ResponseEntity(errorResponse("No Such customer exist."),
+            return new ResponseEntity<>(errorResponse(NO_CUST_FOUND),
                     HttpStatus.BAD_REQUEST);
         Customer c = o.get();
-        return new ResponseEntity(customerResponse(c), HttpStatus.OK);
+        return new ResponseEntity<>(customerResponse(c), HttpStatus.OK);
+
+    }
+
+    @PutMapping("customer/{custId}")
+    public ResponseEntity<Object> upadateCustomer(@RequestAttribute("user")UserPojo currentUser,
+                                                @PathVariable("custId") Long custId,
+                                                @RequestBody Map<String, String> body){
+        Optional<Customer> o = customerService.getCustomerById(custId);
+        if(!o.isPresent())
+            return new ResponseEntity<>(errorResponse(NO_CUST_FOUND),
+                    HttpStatus.BAD_REQUEST);
+        Customer c = o.get();
+        customerService.updateCustomer(c, body);
+        return new ResponseEntity<>(customerResponse(c), HttpStatus.OK);
+
+    }
+
+    @PutMapping("customer/{custId}/kyc")
+    public ResponseEntity<Object> updateKyc(@RequestAttribute("user")UserPojo currentUser,
+                                                 @PathVariable("custId") Long custId,
+                                                 @RequestBody Map<String, String> body){
+        Optional<Customer> o = customerService.getCustomerById(custId);
+        if(!o.isPresent())
+            return new ResponseEntity<>(errorResponse(NO_CUST_FOUND),
+                    HttpStatus.BAD_REQUEST);
+        Customer c = o.get();
+        String pan = body.get("pan");
+        String aadhar = body.get("aadhar");
+        customerService.updateKYC(c, pan, aadhar);
+        return new ResponseEntity<>(customerResponse(c), HttpStatus.OK);
 
     }
 
     @DeleteMapping("customer/{custId}")
-    public ResponseEntity deleteCustomer(@RequestAttribute("user")User currentUser,
+    public ResponseEntity<Object> deleteCustomer(@RequestAttribute("user") UserPojo currentUser,
                                       @PathVariable("custId") Long custId){
-        log.info("delete customer, id: "+custId );
+
         Optional<Customer> o = customerService.getCustomerById(custId);
         if(!o.isPresent())
-            return new ResponseEntity(errorResponse("No Such customer exist."),
+            return new ResponseEntity<>(errorResponse(NO_CUST_FOUND),
                     HttpStatus.BAD_REQUEST);
         Customer c = o.get();
         Set<Account> acc= c.getAccounts();
-        if(acc != null && acc.size() == 0){
-            return new ResponseEntity(errorResponse("Customer have Accounts, Delete account first."),
+        if(acc != null && acc.isEmpty()){
+            return new ResponseEntity<>(errorResponse("Customer have Accounts, Delete account first."),
                     HttpStatus.BAD_REQUEST);
         }
         c = customerService.deleteCustomer(c);
-        return new ResponseEntity(customerResponse(c), HttpStatus.OK);
+        return new ResponseEntity<>(customerResponse(c), HttpStatus.OK);
 
     }
 

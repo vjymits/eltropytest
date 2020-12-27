@@ -2,6 +2,7 @@ package com.elt.bank.config.filter;
 
 import com.elt.bank.modal.Role;
 import com.elt.bank.modal.User;
+import com.elt.bank.pojo.UserPojo;
 import com.elt.bank.repo.UserRepo;
 import com.elt.bank.util.Constants;
 import com.elt.bank.util.JWTUtils;
@@ -30,37 +31,48 @@ import java.util.stream.Collectors;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
-    private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
+    private static final Logger log = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
+
+    /**
+     * Filter every request to make sure authentication
+     * and authorization is valid.
+     * @param request
+     * @param response
+     * @param chain
+     * @throws IOException
+     * @throws ServletException
+     */
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws IOException, ServletException {
-        logger.info("Filtering");
+
         String header = request.getHeader(Constants.HEADER_STRING);
         Map<String, Object> tokenDetails = null;
         if (header != null && header.startsWith(Constants.TOKEN_PREFIX)) {
+            // get rid of Bearer String
             String authToken = header.substring(Constants.TOKEN_PREFIX.length());
             try {
                 tokenDetails = JWTUtils.getTokenMap(authToken);
-                logger.trace("Token details parsed.");
+                log.trace("Token details parsed.");
             } catch (IllegalArgumentException e) {
-                logger.error("An error occured while reading token details", e);
+                log.error("An error occured while reading token details", e);
             } catch (ExpiredJwtException e) {
-                logger.warn("The access token is expired.");
+                log.warn("The access token is expired.");
             } catch (SignatureException e) {
-                logger.error("Token verification failed!", e);
+                log.error("Token verification failed!", e);
             } catch (MalformedJwtException e) {
-                logger.error("Invalid access token.", e);
+                log.error("Invalid access token.", e);
             } catch (Exception e) {
-                logger.error("Something wrong with token ", e);
+                log.error("Something wrong with token ", e);
             }
         } else {
-            logger.trace("couldn't find bearer string, will ignore the header");
+            log.trace("couldn't find bearer string, will ignore the header");
         }
 
         if (tokenDetails != null && JWTUtils.validateJwtToken(header)
                 && SecurityContextHolder.getContext().getAuthentication() == null) {
 
-            logger.info("Token Validated.");
+            log.info("Token Validated.");
 
             List<Role> roles = Arrays.stream(tokenDetails.get(Constants.JWT_TOKEN_ROLES)
                     .toString().split(","))
@@ -69,16 +81,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     .toString().split(","))
                     .map(SimpleGrantedAuthority::new).collect(Collectors.toList());
 
-            User user = new User();
-            user.setUserName(tokenDetails.get(Constants.JWT_USER_NAME).toString());
-            UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(user, "", authorities);
+            UserPojo userPojo = new UserPojo();
+            userPojo.setUsername(tokenDetails.get(Constants.JWT_USER_NAME).toString());
+            UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userPojo, "", authorities);
             authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-            logger.debug("authenticated user, setting security context: " + tokenDetails.get(Constants.JWT_USER_NAME).toString());
             SecurityContextHolder.getContext().setAuthentication(authentication);
             // set request parameters to be used in "/assets" end-point
-            request.setAttribute("user", user);
+            request.setAttribute("user", userPojo);
             request.setAttribute("roles", roles);
-            logger.info("request params filled");
+            log.info("request params filled");
         }
         chain.doFilter(request, response);
         // reset the authentication context after filter chain is processed
