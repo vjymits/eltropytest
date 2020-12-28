@@ -8,6 +8,7 @@ import com.elt.bank.pojo.UserPojo;
 import com.elt.bank.service.AccountService;
 import com.elt.bank.service.CustomerService;
 import com.elt.bank.util.Constants;
+import com.elt.bank.util.Error;
 import com.elt.bank.util.ResponseUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -74,7 +75,7 @@ public class AccountController {
                                       @PathVariable("accId") Long accId){
         Optional<Account> o = accountService.getAccountByAccountId(accId);
         if(!o.isPresent())
-            return new ResponseEntity<>(errorResponse("No Such Account exist."),
+            return new ResponseEntity<>(errorResponse(Error.NO_ACC),
                     HttpStatus.BAD_REQUEST);
         Account a = o.get();
         return new ResponseEntity<>(accountResponse(a), HttpStatus.OK);
@@ -86,7 +87,7 @@ public class AccountController {
                                          @PathVariable("accId") Long accId){
         Optional<Account> o = accountService.getAccountByAccountId(accId);
         if(!o.isPresent())
-            return new ResponseEntity<>(errorResponse("No Such account exist."),
+            return new ResponseEntity<>(errorResponse(Error.NO_ACC),
                     HttpStatus.BAD_REQUEST);
         Account a = o.get();
         accountService.deleteAccount(a);

@@ -2,7 +2,7 @@ package com.elt.bank.modal;
 
 import javax.persistence.*;
 import java.util.Date;
-import java.util.zip.DataFormatException;
+
 
 @Entity(name = "elt_transaction")
 public class Transaction {
@@ -16,9 +16,19 @@ public class Transaction {
 
     private Float amount;
 
-    private String desc;
+    private String description;
 
     private Date date;
+
+    private long timestamp;
+
+    public long getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(long timestamp) {
+        this.timestamp = timestamp;
+    }
 
     public Date getDate() {
         return date;
@@ -29,11 +39,11 @@ public class Transaction {
     }
 
     public String getDesc() {
-        return desc;
+        return description;
     }
 
     public void setDesc(String desc) {
-        this.desc = desc;
+        this.description = desc;
     }
 
     public Long getId() {

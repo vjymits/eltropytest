@@ -5,6 +5,7 @@ import com.elt.bank.pojo.UserPojo;
 import com.elt.bank.service.AccountService;
 import com.elt.bank.service.TransactionService;
 import com.elt.bank.util.Constants;
+import com.elt.bank.util.Error;
 import com.elt.bank.util.ResponseUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -24,13 +25,21 @@ public class TransactionController {
     @Autowired
     private AccountService accountService;
 
-    @PostMapping("/transaction")
-    public ResponseEntity<Object> createTransaction(@RequestAttribute("user") UserPojo user,
+    private static final String AMT = "amount";
+
+    /**
+     * Transfer the amount from one account to another.
+     * @param user
+     * @param body
+     * @return
+     */
+    @PostMapping("/transaction/transfer")
+    public ResponseEntity<Object> trasferTransaction(@RequestAttribute("user") UserPojo user,
                                                     @RequestBody Map<String, String> body) {
 
         long sourceAccountId = Long.parseLong(body.get("sourceAccountId"));
         long targetAccountId = Long.parseLong(body.get("targetAccountId"));
-        float amount = Float.parseFloat(body.get("amount"));
+        float amount = Float.parseFloat(body.get(AMT));
         // Validate
         Optional<Account> o = accountService.getAccountByAccountId(sourceAccountId);
         if(!o.isPresent())
@@ -44,12 +53,66 @@ public class TransactionController {
 
         Account target = o.get();
         if(source.getBalance()-amount < 0){
-            return new ResponseEntity<>(errorResponse("Insufficient balance!")
+            return new ResponseEntity<>(errorResponse(Error.NOT_ENOUGH_BAL)
                     , HttpStatus.BAD_REQUEST);
         }
-        Map<String, Object> m = transactionService.createTransaction(source, target, amount);
+        if(sourceAccountId == targetAccountId) {
+            return new ResponseEntity<>(errorResponse("Invalid accounts.")
+                    , HttpStatus.BAD_REQUEST);
+        }
+
+        Map<String, Object> m = transactionService.transfer(source, target, amount);
         return new ResponseEntity<>(m, HttpStatus.OK);
     }
+
+    /**
+     * Withdraw the amount.
+     * @param currentUser
+     * @param body
+     * @return
+     */
+    @PostMapping("/transaction/withdraw")
+    public ResponseEntity<Object> witdrawTransaction(@RequestAttribute("user") UserPojo currentUser,
+                                                     @RequestBody Map<String, String> body){
+
+        long accountId = Long.parseLong(body.get("accountId"));
+        float amount = Float.parseFloat(body.get(AMT));
+        Optional<Account> o = accountService.getAccountByAccountId(accountId);
+        if(!o.isPresent())
+            return new ResponseEntity<>(errorResponse(Error.NO_ACC)
+                    , HttpStatus.BAD_REQUEST);
+        Account a = o.get();
+        if(a.getBalance()-amount < 0){
+            return new ResponseEntity<>(errorResponse(Error.NOT_ENOUGH_BAL)
+                    , HttpStatus.BAD_REQUEST);
+        }
+        Map<String, Object> m = transactionService.withdraw(a, amount);
+        return new ResponseEntity<>(m, HttpStatus.OK);
+    }
+
+
+    /**
+     * Deposit into account.
+     * @param currentUser
+     * @param body
+     * @return
+     */
+    @PostMapping("/transaction/deposit")
+    public ResponseEntity<Object> depositTransaction(@RequestAttribute("user") UserPojo currentUser,
+                                                     @RequestBody Map<String, String> body){
+        long accountId = Long.parseLong(body.get("accountId"));
+        float amount = Float.parseFloat(body.get(AMT));
+        Optional<Account> o = accountService.getAccountByAccountId(accountId);
+        if(!o.isPresent())
+            return new ResponseEntity<>(errorResponse(Error.NO_ACC)
+                    , HttpStatus.BAD_REQUEST);
+        Account a = o.get();
+        Map<String, Object> m = transactionService.deposit(a, amount);
+        return new ResponseEntity<>(m, HttpStatus.OK);
+
+
+    }
+
 
     private Map<String, String> errorResponse(String msg) {
         return ResponseUtil.errorResponse(msg);
