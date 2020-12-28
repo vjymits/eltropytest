@@ -4,22 +4,16 @@ import com.elt.bank.modal.Account;
 import com.elt.bank.modal.Customer;
 import com.elt.bank.modal.Transaction;
 
-
-import com.elt.bank.service.AccountService;
-import com.elt.bank.service.CustomerService;
-import com.elt.bank.service.TransactionService;
 import com.elt.bank.util.ResponseUtil;
 import com.lowagie.text.Font;
-import com.lowagie.text.alignment.HorizontalAlignment;
-import com.lowagie.text.alignment.VerticalAlignment;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+
 
 import java.awt.*;
-import java.text.MessageFormat;
+
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 
 import com.lowagie.text.*;
