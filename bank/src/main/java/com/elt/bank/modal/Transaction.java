@@ -12,6 +12,7 @@ public class Transaction {
     private Long id;
 
     @ManyToOne
+    @JoinColumn
     private Account acc;
 
     private Float amount;

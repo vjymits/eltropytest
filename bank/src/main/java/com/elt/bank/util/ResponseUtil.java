@@ -17,4 +17,18 @@ public class ResponseUtil {
         errorResult.put("message", msg);
         return errorResult;
     }
+
+
+    /**
+     * Common method to be used to send success response.
+     *
+     * @param msg response to be sent as in message key
+     * @return Map containing the response data
+     */
+    public static Map<String, String> successResponse(String msg) {
+        Map<String, String> res = new TreeMap<>();
+        res.put("status", "success");
+        res.put("message", msg);
+        return res;
+    }
 }
