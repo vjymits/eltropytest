@@ -1,13 +1,16 @@
 package com.elt.bank.controller;
 
 
+import com.elt.bank.Setup.StatementGenerator;
 import com.elt.bank.modal.Account;
 import com.elt.bank.modal.Customer;
 import com.elt.bank.modal.User;
 import com.elt.bank.pojo.UserPojo;
 import com.elt.bank.service.AccountService;
 import com.elt.bank.service.CustomerService;
+import com.elt.bank.service.TransactionService;
 import com.elt.bank.util.Constants;
+import com.elt.bank.util.Error;
 import com.elt.bank.util.ResponseUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -15,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.PostConstruct;
+import javax.servlet.http.HttpServletResponse;
 import java.util.*;
 
 @RestController
@@ -26,6 +30,9 @@ public class AccountController {
 
     @Autowired
     private AccountService accountService;
+
+    @Autowired
+    private TransactionService transactionService;
 
     private Set<String> accountTypes;
 
@@ -74,11 +81,29 @@ public class AccountController {
                                       @PathVariable("accId") Long accId){
         Optional<Account> o = accountService.getAccountByAccountId(accId);
         if(!o.isPresent())
-            return new ResponseEntity<>(errorResponse("No Such Account exist."),
+            return new ResponseEntity<>(errorResponse(Error.NO_ACC),
                     HttpStatus.BAD_REQUEST);
         Account a = o.get();
         return new ResponseEntity<>(accountResponse(a), HttpStatus.OK);
 
+    }
+
+    @GetMapping("account/{accId}/stmt")
+    public ResponseEntity<Object> getAccountStmt(@RequestAttribute("user")UserPojo currentUser,
+                                             @PathVariable("accId") Long accId,
+                                                 HttpServletResponse response){
+        response.setContentType("application/pdf");
+        String headerKey = "Content-Disposition";
+        String headerValue = "attachment; filename="+accId+"_"+ System.currentTimeMillis() + "_stmt.pdf";
+        response.setHeader(headerKey, headerValue);
+        Optional<Account> o = accountService.getAccountByAccountId(accId);
+        if(!o.isPresent())
+            return new ResponseEntity<>(errorResponse(Error.NO_ACC),
+                    HttpStatus.BAD_REQUEST);
+        Account a = o.get();
+
+        StatementGenerator stmtGen = new StatementGenerator(a, a.getTransactionSet());
+        return new ResponseEntity<>(stmtGen.generate(response), HttpStatus.OK);
     }
 
     @DeleteMapping("account/{accId}")
@@ -86,7 +111,7 @@ public class AccountController {
                                          @PathVariable("accId") Long accId){
         Optional<Account> o = accountService.getAccountByAccountId(accId);
         if(!o.isPresent())
-            return new ResponseEntity<>(errorResponse("No Such account exist."),
+            return new ResponseEntity<>(errorResponse(Error.NO_ACC),
                     HttpStatus.BAD_REQUEST);
         Account a = o.get();
         accountService.deleteAccount(a);
@@ -96,13 +121,6 @@ public class AccountController {
 
 
     private Map<String, Object> accountResponse(Account a) {
-        Map<String, Object> m = new HashMap<>();
-        m.put("accountType", a.getAccType());
-        m.put("balance", a.getBalance());
-        m.put("accountNo", a.getNo());
-        m.put(CUSTOMER_ID, a.getCustomer().getId());
-        m.put("customerName", a.getCustomer().getName());
-        m.put("link", "/"+Constants.API_BASE_URL+"/account/"+a.getNo());
-        return m;
+        return ResponseUtil.accountResponse(a);
     }
 }

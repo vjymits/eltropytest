@@ -4,9 +4,7 @@ package com.elt.bank.config;
 import javax.servlet.http.HttpServletResponse;
 
 import com.elt.bank.config.filter.JwtAuthenticationFilter;
-import com.elt.bank.util.Constants;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -31,7 +29,6 @@ import java.util.Set;
 @EnableWebSecurity
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
-    private static final Logger logger = LoggerFactory.getLogger(WebSecurityConfig.class);
     /**
      * Security configurations
      */

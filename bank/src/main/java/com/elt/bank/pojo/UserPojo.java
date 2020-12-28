@@ -1,6 +1,5 @@
 package com.elt.bank.pojo;
 
-import com.elt.bank.modal.Role;
 
 import java.util.Set;
 

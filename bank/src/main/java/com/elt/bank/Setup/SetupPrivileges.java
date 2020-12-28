@@ -67,9 +67,20 @@ public class SetupPrivileges implements ApplicationListener<ContextRefreshedEven
         user.setEmail("vjymits@gmail.com");
         user.setRoles(Arrays.asList(adminRole));
         user.setType(Constants.ADMIN_USER_TYPE);
-        userRepository.save(user);
+        createUserIfNotFound(user);
         log.info("Admin setup Done...");
         alreadySetup = true;
+    }
+
+    @Transactional
+    private User createUserIfNotFound(User u) {
+        User user = userRepository.findByUserName(u.getUserName());
+        if(user != null) {
+            log.warn("User already exist.");
+            return user;
+        }
+        u = userRepository.save(u);
+        return u;
     }
 
     @Transactional

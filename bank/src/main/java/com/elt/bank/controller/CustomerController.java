@@ -6,18 +6,18 @@ import com.elt.bank.modal.Customer;
 import com.elt.bank.pojo.UserPojo;
 import com.elt.bank.service.CustomerService;
 import com.elt.bank.util.Constants;
+import com.elt.bank.util.Error;
 import com.elt.bank.util.ResponseUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.TreeMap;
+
+import java.util.*;
 
 @RestController
 @RequestMapping(Constants.API_BASE_URL)
@@ -31,6 +31,7 @@ public class CustomerController {
 
 
     @PostMapping("/customer")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<Object> createCustomer(@RequestAttribute("user") UserPojo user,
                                          @RequestBody Map<String, String> body) {
         String name = body.get("name");
@@ -81,6 +82,18 @@ public class CustomerController {
         Customer c = o.get();
         String pan = body.get("pan");
         String aadhar = body.get("aadhar");
+        boolean invalidPan = pan == null || pan.isEmpty();
+        boolean invalidAdr = aadhar == null || aadhar.isEmpty();
+
+        if(invalidPan) {
+            log.warn("Invalid PAN supplied");
+            return new ResponseEntity<>(errorResponse(Error.MANDATORY_PAN), HttpStatus.BAD_REQUEST);
+        }
+
+        if(invalidAdr){
+            log.warn("Invalid Aadhar no supplied");
+            return new ResponseEntity<>(errorResponse(Error.MANDATORY_ADR), HttpStatus.BAD_REQUEST);
+        }
         customerService.updateKYC(c, pan, aadhar);
         return new ResponseEntity<>(customerResponse(c), HttpStatus.OK);
 
@@ -117,6 +130,14 @@ public class CustomerController {
         m.put("pan", c.getPan());
         m.put("aadhar", c.getAadhar());
         m.put("link", Constants.API_BASE_URL+"/customer/"+c.getId());
+        Set<Account> accounts = c.getAccounts();
+        if(null == accounts)
+            accounts = new HashSet<>();
+        Set<Map<String, Object>> accountSet = new HashSet<>();
+        for(Account a: accounts) {
+            accountSet.add(ResponseUtil.accountResponse(a));
+        }
+        m.put("accounts", accountSet);
         return m;
     }
 

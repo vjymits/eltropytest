@@ -26,6 +26,10 @@ public interface Constants {
     String JWT_EXPIRY_TIME = "expiryTime";
     String JWT_USER_NAME = "username";
 
+    //ROLES
+    String ROLE_ADMIN = "ROLE_ADMIN";
+    String ROLE_EMP = "ROLE_EMP";
+
     // Admin privileges
     String ADD_EMP_PRIVILEGE = "ADD_EMP_PRIVILEGE";
     String DEL_EMP_PRIVILEGE = "DEL_EMP_PRIVILEGE";
