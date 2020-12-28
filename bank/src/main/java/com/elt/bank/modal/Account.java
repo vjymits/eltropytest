@@ -1,5 +1,7 @@
 package com.elt.bank.modal;
 
+import net.minidev.json.annotate.JsonIgnore;
+
 import javax.persistence.*;
 import java.util.Set;
 
@@ -11,6 +13,7 @@ public class Account {
     private Long no;
     private float balance;
     private String accType;
+
 
     @ManyToOne
     @JoinColumn(name="customer_id", nullable=false)

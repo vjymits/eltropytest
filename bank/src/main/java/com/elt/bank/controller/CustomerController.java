@@ -16,10 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.TreeMap;
+import java.util.*;
 
 @RestController
 @RequestMapping(Constants.API_BASE_URL)
@@ -131,6 +128,12 @@ public class CustomerController {
         m.put("pan", c.getPan());
         m.put("aadhar", c.getAadhar());
         m.put("link", Constants.API_BASE_URL+"/customer/"+c.getId());
+        Set<Account> accounts = c.getAccounts();
+        Set<Map<String, Object>> accountSet = new HashSet<>();
+        for(Account a: accounts) {
+            accountSet.add(ResponseUtil.accountResponse(a));
+        }
+        m.put("accounts", accountSet);
         return m;
     }
 

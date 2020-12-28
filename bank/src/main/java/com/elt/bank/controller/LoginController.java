@@ -33,6 +33,30 @@ public class LoginController {
      * @param reqBody
      * @return
      */
+    @PostMapping("/emp")
+    public ResponseEntity<Object> empLogin(@RequestBody Map<String, String> reqBody) {
+        final String username = reqBody.get("username");
+        final String password = reqBody.get("password");
+
+        if(password == null || password.length() == 0)
+            return new ResponseEntity<>(errorResponse("Invalid password"),
+                    HttpStatus.UNAUTHORIZED);
+
+        User user = userRepo.findByUserName(username);
+        if(user == null ||  !passwordEncoder.matches(password, user.getPassword())
+                || !user.getType().equals(Constants.EMP_USER_TYPE)) {
+            return new ResponseEntity<>(errorResponse("Incorrect username or password"),
+                    HttpStatus.UNAUTHORIZED);
+        }
+        String token = JWTUtils.genrateJwtToken(user);
+        Map<String, Object> authResult = new TreeMap<>();
+        authResult.put("token", token);
+        authResult.put("name", user.getFirstName()+" "+user.getLastName());
+        authResult.put("username", user.getUserName());
+        authResult.put("email", user.getEmail());
+        return new ResponseEntity<>(authResult, HttpStatus.OK);
+    }
+
     @PostMapping("/admin")
     public ResponseEntity<Object> adminLogin(@RequestBody Map<String, String> reqBody) {
         final String username = reqBody.get("username");
@@ -43,10 +67,12 @@ public class LoginController {
                     HttpStatus.UNAUTHORIZED);
 
         User user = userRepo.findByUserName(username);
-        if(user == null ||  !passwordEncoder.matches(password, user.getPassword())) {
+        if(user == null ||  !passwordEncoder.matches(password, user.getPassword())
+                || !user.getType().equals(Constants.ADMIN_USER_TYPE)) {
             return new ResponseEntity<>(errorResponse("Incorrect username or password"),
                     HttpStatus.UNAUTHORIZED);
         }
+
         String token = JWTUtils.genrateJwtToken(user);
         Map<String, Object> authResult = new TreeMap<>();
         authResult.put("token", token);

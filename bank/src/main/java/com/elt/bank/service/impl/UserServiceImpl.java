@@ -40,7 +40,7 @@ public class UserServiceImpl implements UserService {
         newEmp.setFirstName(data.get("firstname"));
         newEmp.setLastName(data.get("lastname"));
         newEmp.setEmail(data.get("email"));
-        newEmp.setPassword(data.get("password"));
+        newEmp.setPassword(passwordEncoder.encode(data.get("password")));
         Role empRole = roleRepo.findByName("ROLE_EMP");
         log.info("Role : {}",empRole);
         newEmp.setRoles(Arrays.asList(empRole));

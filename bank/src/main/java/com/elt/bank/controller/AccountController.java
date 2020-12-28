@@ -121,13 +121,6 @@ public class AccountController {
 
 
     private Map<String, Object> accountResponse(Account a) {
-        Map<String, Object> m = new HashMap<>();
-        m.put("accountType", a.getAccType());
-        m.put("balance", a.getBalance());
-        m.put("accountNo", a.getNo());
-        m.put(CUSTOMER_ID, a.getCustomer().getId());
-        m.put("customerName", a.getCustomer().getName());
-        m.put("link", "/"+Constants.API_BASE_URL+"/account/"+a.getNo());
-        return m;
+        return ResponseUtil.accountResponse(a);
     }
 }
